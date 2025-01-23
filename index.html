@@ -22,50 +22,50 @@
             <div class="space-y-6 bg-gray-800 p-6 rounded-xl shadow-lg">
                 <div>
                     <label class="block text-sm font-medium mb-2">Your Text</label>
-                    <textarea 
+                    <textarea
                         id="inputText"
                         class="w-full h-32 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Paste your text here..."></textarea>
                 </div>
                 <div class="flex space-x-4">
-                    <button 
+                    <button
                         onclick="startRainEffect()"
                         class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition duration-200">
                         Text Rain
                     </button>
-                    <button 
+                    <button
                         onclick="generateWordCloud()"
                         class="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition duration-200">
                         Word Cloud
                     </button>
-                    <button 
+                    <button
                         onclick="generateCirclePacking()"
                         class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition duration-200">
                         Circle Packing
                     </button>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <input 
-                        type="checkbox" 
-                        id="circularWrap" 
+                    <input
+                        type="checkbox"
+                        id="circularWrap"
                         class="w-4 h-4 text-blue-600 rounded border-gray-600 focus:ring-blue-500"
                         checked>
                     <label for="circularWrap" class="text-sm">Enable Circular Wrapping</label>
                 </div>
                 <div class="flex space-x-4">
-                    <button 
+                    <button
                         onclick="changeDirection('vertical')"
                         id="verticalBtn"
                         class="flex-1 px-4 py-2 bg-blue-600 rounded-lg">
                         Vertical
                     </button>
-                    <button 
+                    <button
                         onclick="changeDirection('horizontal')"
                         id="horizontalBtn"
                         class="flex-1 px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600">
                         Horizontal
                     </button>
-                    <button 
+                    <button
                         onclick="changeDirection('diagonal')"
                         id="diagonalBtn"
                         class="flex-1 px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600">
@@ -81,6 +81,15 @@
                     <div id="circlePacking" class="absolute inset-0 hidden"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying additional information -->
+    <div id="infoModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+            <h2 class="text-2xl font-bold mb-4">Word Information</h2>
+            <p id="wordInfo" class="mb-4"></p>
+            <button onclick="closeModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition duration-200">Close</button>
         </div>
     </div>
 
@@ -113,7 +122,7 @@
                     btn.classList.add('bg-gray-700');
                 }
             });
-            
+
             // Reset speeds for new direction
             rainData.forEach(data => {
                 if (direction === 'vertical') {
@@ -137,6 +146,20 @@
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
+        function getSentimentColor(word) {
+            // Simple sentiment analysis (you can use an API for more accurate results)
+            const positiveWords = ['good', 'happy', 'joy', 'love', 'great'];
+            const negativeWords = ['bad', 'sad', 'hate', 'angry', 'terrible'];
+
+            if (positiveWords.includes(word.toLowerCase())) {
+                return '#60A5FA'; // Blue for positive
+            } else if (negativeWords.includes(word.toLowerCase())) {
+                return '#FB7185'; // Red for negative
+            } else {
+                return '#FCA5A5'; // Neutral color
+            }
+        }
+
         function startRainEffect() {
             switchView('rain');
             const text = document.getElementById('inputText').value;
@@ -148,14 +171,14 @@
                 uniqueWords.forEach(word => {
                     const frequency = words.filter(w => w === word).length;
                     const size = Math.min(30, 15 + (frequency * 2));
-                    
+
                     rainData.push({
                         word,
                         x: Math.random() * canvas.width,
                         y: Math.random() * -canvas.height,
                         speedX: currentDirection === 'horizontal' || currentDirection === 'diagonal' ? Math.random() * 0.5 + 0.5 : 0,
                         speedY: currentDirection === 'vertical' || currentDirection === 'diagonal' ? Math.random() * 0.5 + 0.5 : 0,
-                        color: getRandomColor(),
+                        color: getSentimentColor(word),
                         size,
                         isMoving: false
                     });
@@ -166,7 +189,7 @@
 
         function animateRain() {
             if (currentView !== 'rain') return;
-            
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'transparent';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -176,7 +199,7 @@
             rainData.forEach(data => {
                 ctx.font = `${data.size}px Arial`;
                 ctx.fillStyle = data.color;
-                
+
                 if (data.isMoving) {
                     data.x = offsetX;
                     data.y = offsetY;
@@ -194,7 +217,7 @@
                         }
                     }
                 }
-                
+
                 ctx.fillText(data.word, data.x, data.y);
             });
 
@@ -206,7 +229,7 @@
             const text = document.getElementById('inputText').value;
             const words = text.split(/\s+/);
             const wordFreq = {};
-            
+
             words.forEach(word => {
                 if (word) wordFreq[word] = (wordFreq[word] || 0) + 1;
             });
@@ -244,7 +267,7 @@
                     .enter().append("text")
                     .style("font-size", d => `${d.size}px`)
                     .style("font-family", "Impact")
-                    .style("fill", () => getRandomColor())
+                    .style("fill", d => getSentimentColor(d.text))
                     .attr("text-anchor", "middle")
                     .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
                     .text(d => d.text)
@@ -259,6 +282,9 @@
                             .transition()
                             .duration(200)
                             .style("font-size", d => `${d.size}px`);
+                    })
+                    .on("click", function(event, d) {
+                        showWordInfo(d.text, d.size);
                     });
             }
         }
@@ -268,7 +294,7 @@
             const text = document.getElementById('inputText').value;
             const words = text.split(/\s+/);
             const wordFreq = {};
-            
+
             words.forEach(word => {
                 if (word) wordFreq[word] = (wordFreq[word] || 0) + 1;
             });
@@ -317,6 +343,9 @@
                 })
                 .on('mouseout', function() {
                     d3.select(this).attr('opacity', 0.7);
+                })
+                .on('click', function(event, d) {
+                    showWordInfo(d.data.name, d.value);
                 });
 
             svg.selectAll('text')
@@ -332,13 +361,23 @@
                 .style('pointer-events', 'none');
         }
 
+        function showWordInfo(word, frequency) {
+            const wordInfo = `Word: ${word}<br>Frequency: ${frequency}`;
+            document.getElementById('wordInfo').innerHTML = wordInfo;
+            document.getElementById('infoModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').classList.add('hidden');
+        }
+
         canvas.addEventListener('mousedown', function(event) {
             const mouseX = event.offsetX;
             const mouseY = event.offsetY;
 
             rainData.forEach(data => {
                 const wordWidth = ctx.measureText(data.word).width;
-                if (mouseX >= data.x && mouseX <= data.x + wordWidth && 
+                if (mouseX >= data.x && mouseX <= data.x + wordWidth &&
                     mouseY >= data.y - data.size && mouseY <= data.y) {
                     selectedWord = data;
                     selectedWord.isMoving = true;
